@@ -17,6 +17,8 @@ type Location struct {
 	Level int64  `json:"tingkat"`
 }
 
+type Locations []Location
+
 type districtTree struct {
 	Location
 	Subdistrict []Location `json:"desa_kelurahan"`
@@ -34,7 +36,6 @@ type provinceTree struct {
 
 const (
 	baseURL            = "https://sirekap-obj-data.kpu.go.id"
-	pathMasterLocation = "wilayah/pemilu/ppwp"
 )
 
 // loggingTransport is a custom transport that logs each HTTP request and response
@@ -60,6 +61,34 @@ func (t *loggingTransport) RoundTrip(req *http.Request) (*http.Response, error) 
 	return resp, nil
 }
 
+// https://sirekap-obj-2024.kpu.go.id/json-public/wilayah/pemilu/ppwp/73/7371/737114.json
+// https://sirekap-obj-data.kpu.go.id/wilayah/pemilu/ppwp/12/1212/121203.json
+func fetchLocations(client *http.Client, dest *Locations, dynamicPaths ...string) error {
+	basePathLocation, err := url.JoinPath(baseURL, "wilayah/pemilu/ppwp")
+	if err != nil {
+		return fmt.Errorf("error on build base path locations: %w", err)
+	}
+
+	source, err := url.JoinPath(basePathLocation, dynamicPaths...)
+	if err != nil {
+		return fmt.Errorf("error on build full URL: %w", err)
+	}
+
+	resp, err := client.Get(fmt.Sprintf("%s.%s", source, "json"))
+	if err != nil {
+		return fmt.Errorf("error on http get: %w", err)
+	}
+
+	defer resp.Body.Close()
+
+	err = json.NewDecoder(resp.Body).Decode(dest)
+	if err != nil {
+		return fmt.Errorf("error on decode response: %w", err)
+	}
+
+	return nil
+}
+
 func GetLocations(w http.ResponseWriter, r *http.Request) {
 	transport := &http.Transport{
 		TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
@@ -72,18 +101,8 @@ func GetLocations(w http.ResponseWriter, r *http.Request) {
 		},
 	}
 
-	// Fetch data from the URL
-	pathProvinceList, _ := url.JoinPath(baseURL, pathMasterLocation, "0.json")
-	resp, err := client.Get(pathProvinceList)
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
-	}
-	defer resp.Body.Close()
-
-	// Decode the JSON response
-	var provinces []Location
-	err = json.NewDecoder(resp.Body).Decode(&provinces)
+	var provinces Locations
+	err := fetchLocations(client, &provinces, "0")
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
@@ -93,7 +112,9 @@ func GetLocations(w http.ResponseWriter, r *http.Request) {
 
 	for i := 0; i < len(provinces); i++ {
 		locations[i].Location = provinces[i]
-		cities, err := getCities(client, provinces[i].Code)
+
+		var cities Locations
+		err = fetchLocations(client, &cities, provinces[i].Code)
 		if err != nil {
 			http.Error(w, fmt.Sprintf("getCities %s: %s", provinces[i].Name, err.Error()), http.StatusInternalServerError)
 			return
@@ -102,7 +123,9 @@ func GetLocations(w http.ResponseWriter, r *http.Request) {
 		locations[i].Cities = make([]cityTree, len(cities))
 		for ii := 0; ii < len(cities); ii++ {
 			locations[i].Cities[ii].Location = cities[ii]
-			districts, err := getDistricts(client, provinces[i].Code, cities[ii].Code)
+
+			var districts Locations
+			err = fetchLocations(client, &districts, provinces[i].Code, cities[ii].Code)
 			if err != nil {
 				http.Error(w, fmt.Sprintf("getDistricts %s: %s", cities[ii].Name, err.Error()), http.StatusInternalServerError)
 				return
@@ -111,7 +134,9 @@ func GetLocations(w http.ResponseWriter, r *http.Request) {
 			locations[i].Cities[ii].Districts = make([]districtTree, len(districts))
 			for iii := 0; iii < len(districts); iii++ {
 				locations[i].Cities[ii].Districts[iii].Location = districts[iii]
-				subdistricts, err := getSubdistricts(client, provinces[i].Code, cities[ii].Code, districts[iii].Code)
+
+				var subdistricts Locations
+				err = fetchLocations(client, &subdistricts, provinces[i].Code, cities[ii].Code, districts[iii].Code)
 				if err != nil {
 					http.Error(w, fmt.Sprintf("getSubdistricts %s: %s", cities[ii].Name, err.Error()), http.StatusInternalServerError)
 					return
@@ -132,79 +157,6 @@ func GetLocations(w http.ResponseWriter, r *http.Request) {
 
 	// Write the JSON response to the client
 	json.NewEncoder(w).Encode(locations)
-}
-
-func getCities(client *http.Client, provinceCode string) ([]Location, error) {
-	// Fetch data from the URL
-	log.Printf("\ngetCities for %s", provinceCode)
-	fullPath, err := url.JoinPath(baseURL, pathMasterLocation, provinceCode+".json")
-	if err != nil {
-		return nil, err
-	}
-
-	resp, err := client.Get(fullPath)
-	if err != nil {
-		return nil, err
-	}
-	defer resp.Body.Close()
-
-	// Decode the JSON response
-	var cities []Location
-	err = json.NewDecoder(resp.Body).Decode(&cities)
-	if err != nil {
-		return nil, err
-	}
-
-	return cities, nil
-}
-
-func getDistricts(client *http.Client, provinceCode, cityCode string) ([]Location, error) {
-	// Fetch data from the URL
-	log.Printf("\ngetDistricts for %s:%s", provinceCode, cityCode)
-	fullPath, err := url.JoinPath(baseURL, pathMasterLocation, provinceCode, cityCode+".json")
-	if err != nil {
-		return nil, err
-	}
-
-	resp, err := client.Get(fullPath)
-	if err != nil {
-		return nil, err
-	}
-	defer resp.Body.Close()
-
-	// Decode the JSON response
-	var districts []Location
-	err = json.NewDecoder(resp.Body).Decode(&districts)
-	if err != nil {
-		return nil, err
-	}
-
-	return districts, nil
-}
-
-// https://sirekap-obj-2024.kpu.go.id/json-public/wilayah/pemilu/ppwp/73/7371/737114.json
-func getSubdistricts(client *http.Client, provinceCode, cityCode, districtCode string) ([]Location, error) {
-	// Fetch data from the URL
-	log.Printf("\ngetSubdistricts for %s:%s:%s", provinceCode, cityCode, districtCode)
-	fullPath, err := url.JoinPath(baseURL, pathMasterLocation, provinceCode, cityCode, districtCode+".json")
-	if err != nil {
-		return nil, err
-	}
-
-	resp, err := client.Get(fullPath)
-	if err != nil {
-		return nil, err
-	}
-	defer resp.Body.Close()
-
-	// Decode the JSON response
-	var districts []Location
-	err = json.NewDecoder(resp.Body).Decode(&districts)
-	if err != nil {
-		return nil, err
-	}
-
-	return districts, nil
 }
 
 func main() {
