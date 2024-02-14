@@ -8,6 +8,8 @@ import (
 	"net/http"
 	"net/url"
 	"pemilu2024/pilpres"
+	"runtime"
+	"sync"
 )
 
 type Location struct {
@@ -35,7 +37,7 @@ type provinceTree struct {
 }
 
 const (
-	baseURL            = "https://sirekap-obj-data.kpu.go.id"
+	baseURL = "https://sirekap-obj-data.kpu.go.id"
 )
 
 // loggingTransport is a custom transport that logs each HTTP request and response
@@ -89,6 +91,46 @@ func fetchLocations(client *http.Client, dest *Locations, dynamicPaths ...string
 	return nil
 }
 
+func getByProvince(client *http.Client, province Location) (provTree provinceTree, err error) {
+	provTree.Location = province
+
+	var cities Locations
+	err = fetchLocations(client, &cities, province.Code)
+	if err != nil {
+		return provTree, fmt.Errorf("getCities %s: %w", province.Name, err)
+	}
+
+	provTree.Cities = make([]cityTree, len(cities))
+	for idxCity := 0; idxCity < len(cities); idxCity++ {
+		provTree.Cities[idxCity].Location = cities[idxCity]
+
+		var districts Locations
+		err = fetchLocations(client, &districts, province.Code, cities[idxCity].Code)
+		if err != nil {
+			return provTree, fmt.Errorf("getDistricts %s: %w", cities[idxCity].Name, err)
+		}
+
+		provTree.Cities[idxCity].Districts = make([]districtTree, len(districts))
+		for idxDist := 0; idxDist < len(districts); idxDist++ {
+			provTree.Cities[idxCity].Districts[idxDist].Location = districts[idxDist]
+
+			var subdistricts Locations
+			err = fetchLocations(client, &subdistricts, province.Code, cities[idxCity].Code, districts[idxDist].Code)
+			if err != nil {
+				return provTree, fmt.Errorf("getSubdistricts %s: %w", cities[idxCity].Name, err)
+			}
+
+			provTree.Cities[idxCity].Districts[idxDist].Subdistrict = make([]Location, len(subdistricts))
+			for idxSubdist := 0; idxSubdist < len(subdistricts); idxSubdist++ {
+				provTree.Cities[idxCity].Districts[idxDist].Subdistrict[idxSubdist] = subdistricts[idxSubdist]
+			}
+		}
+
+	}
+
+	return provTree, nil
+}
+
 func GetLocations(w http.ResponseWriter, r *http.Request) {
 	transport := &http.Transport{
 		TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
@@ -108,54 +150,36 @@ func GetLocations(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	var locations = make([]provinceTree, len(provinces))
 
-	for i := 0; i < len(provinces); i++ {
-		locations[i].Location = provinces[i]
+	var (
+		locations = make([]provinceTree, len(provinces))
+		maxGoroutine = runtime.NumCPU()
+		sem = make(chan struct{}, maxGoroutine)
+		wg  sync.WaitGroup           
+	)
 
-		var cities Locations
-		err = fetchLocations(client, &cities, provinces[i].Code)
-		if err != nil {
-			http.Error(w, fmt.Sprintf("getCities %s: %s", provinces[i].Name, err.Error()), http.StatusInternalServerError)
-			return
-		}
+	for idxProv := 0; idxProv < len(provinces); idxProv++ {
+		sem <- struct{}{} // Acquire semaphore
 
-		locations[i].Cities = make([]cityTree, len(cities))
-		for ii := 0; ii < len(cities); ii++ {
-			locations[i].Cities[ii].Location = cities[ii]
+		wg.Add(1)
+		go func(idx int) {
+			defer func() {
+				<-sem // Release semaphore
+				wg.Done()
+			}()
 
-			var districts Locations
-			err = fetchLocations(client, &districts, provinces[i].Code, cities[ii].Code)
+			var err error
+			locations[idx], err = getByProvince(client, provinces[idx])
 			if err != nil {
-				http.Error(w, fmt.Sprintf("getDistricts %s: %s", cities[ii].Name, err.Error()), http.StatusInternalServerError)
+				http.Error(w, err.Error(), http.StatusInternalServerError)
 				return
 			}
-
-			locations[i].Cities[ii].Districts = make([]districtTree, len(districts))
-			for iii := 0; iii < len(districts); iii++ {
-				locations[i].Cities[ii].Districts[iii].Location = districts[iii]
-
-				var subdistricts Locations
-				err = fetchLocations(client, &subdistricts, provinces[i].Code, cities[ii].Code, districts[iii].Code)
-				if err != nil {
-					http.Error(w, fmt.Sprintf("getSubdistricts %s: %s", cities[ii].Name, err.Error()), http.StatusInternalServerError)
-					return
-				}
-
-				locations[i].Cities[ii].Districts[iii].Subdistrict = make([]Location, len(subdistricts))
-				for iiii := 0; iiii < len(subdistricts); iiii++ {
-					locations[i].Cities[ii].Districts[iii].Subdistrict[iiii] = subdistricts[iiii]
-				}
-			}
-
-		}
-
+		}(idxProv)
 	}
 
-	// Set the content type header
-	w.Header().Set("Content-Type", "application/json")
+	wg.Wait()
 
-	// Write the JSON response to the client
+	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(locations)
 }
 
