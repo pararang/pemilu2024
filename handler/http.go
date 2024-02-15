@@ -3,12 +3,11 @@ package handler
 import (
 	"encoding/json"
 	"fmt"
+	"github.com/pararang/pemilu2024/kpu"
 	"net/http"
-	"pemilu2024/kpu"
 	"runtime"
 	"sync"
 )
-
 
 type districtTree struct {
 	kpu.Location
@@ -25,17 +24,15 @@ type provinceTree struct {
 	Cities []cityTree `json:"kota_kabupaten"`
 }
 
-
 type Handler struct {
 	sirekap *kpu.Sirekap
 }
 
-func NewHandler (sirekap *kpu.Sirekap) *Handler {
+func NewHandler(sirekap *kpu.Sirekap) *Handler {
 	return &Handler{
 		sirekap: sirekap,
 	}
 }
-
 
 func (h *Handler) getByProvince(province kpu.Location) (provTree provinceTree, err error) {
 	provTree.Location = province

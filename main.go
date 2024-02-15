@@ -4,8 +4,9 @@ import (
 	"crypto/tls"
 	"log"
 	"net/http"
-	"pemilu2024/handler"
-	"pemilu2024/kpu"
+
+	"github.com/pararang/pemilu2024/handler"
+	"github.com/pararang/pemilu2024/kpu"
 )
 
 type loggingTransport struct {
