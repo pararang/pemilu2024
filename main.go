@@ -5,8 +5,8 @@ import (
 	"log"
 	"net/http"
 
-	"github.com/pararang/pemilu2024/handler"
 	"github.com/pararang/pemilu2024/kpu"
+	"github.com/pararang/pemilu2024/presenter"
 )
 
 type loggingTransport struct {
@@ -38,10 +38,11 @@ func main() {
 		},
 	}
 
-	handler := handler.NewHandler(kpu.NewSirekap(client))
+	presenter := presenter.NewPresenterHTTP(kpu.NewSirekap(client))
+
 	// Define the endpoint handler
-	http.HandleFunc("/fetch-votes", handler.GetVotes)
-	http.HandleFunc("/fetch-locations", handler.GetLocations)
+	http.HandleFunc("/fetch-votes", presenter.GetVotes)
+	http.HandleFunc("/fetch-locations", presenter.GetLocations)
 
 	// Start the HTTP server
 	log.Println("Server started on :8080")
