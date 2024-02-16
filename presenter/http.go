@@ -10,13 +10,13 @@ import (
 
 type Handler struct {
 	sirekap *kpu.Sirekap
-	con     *controller.Controller
+	control     *controller.Controller
 }
 
 func NewPresenterHTTP(sirekap *kpu.Sirekap) *Handler {
 	return &Handler{
 		sirekap: sirekap,
-		con: controller.NewController(sirekap),
+		control: controller.NewController(sirekap),
 	}
 }
 
@@ -58,7 +58,7 @@ func (h *Handler) GetVotes(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *Handler) GetLocations(w http.ResponseWriter, r *http.Request) {
-	locations, err := h.con.GetLocations()
+	locations, err := h.control.GetLocations()
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
