@@ -9,13 +9,11 @@ import (
 )
 
 type Handler struct {
-	sirekap *kpu.Sirekap
 	control     *controller.Controller
 }
 
 func NewPresenterHTTP(sirekap *kpu.Sirekap) *Handler {
 	return &Handler{
-		sirekap: sirekap,
 		control: controller.NewController(sirekap),
 	}
 }
