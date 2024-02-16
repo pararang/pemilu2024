@@ -10,7 +10,7 @@ import (
 
 type DistrictTree struct {
 	kpu.Location
-	Subdistrict kpu.Locations `json:"desa_kelurahan"`
+	Subdistrict []kpu.Location `json:"desa_kelurahan"`
 }
 
 type CityTree struct {

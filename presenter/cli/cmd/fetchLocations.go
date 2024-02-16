@@ -1,14 +1,14 @@
-/*
-Copyright © 2024 NAME HERE <EMAIL ADDRESS>
-*/
+// nolint:typecheck
 package cmd
 
 import (
+	"encoding/csv"
 	"encoding/json"
 	"fmt"
 	"log"
 	"net/http"
 	"os"
+	"strconv"
 	"time"
 
 	"github.com/pararang/pemilu2024/controller"
@@ -35,22 +35,82 @@ var fetchLocationsCmd = &cobra.Command{
 			log.Fatal(err)
 		}
 
+		fileName := fmt.Sprintf("indonesia_location_%s.%s", time.Now().Format("20060102-150405"), fileType)
+
 		if fileType == "json" {
 			jsonData, err := json.Marshal(locations)
 			if err != nil {
-				fmt.Println("Error:", err)
-				return
+				log.Fatal(err)
 			}
 
-			fileName := fmt.Sprintf("indonesia_location_%s.json", time.Now().Format("20060102-150405"))
 			err = os.WriteFile(fileName, jsonData, 0644)
 			if err != nil {
-				fmt.Println("Error writing to file:", err)
-				return
+				log.Fatal(err)
 			}
 		}
 
+		if fileType == "csv" {
+			file, err := os.Create(fileName)
+			if err != nil {
+				log.Fatal(err)
+			}
+			defer file.Close()
 
+			writer := csv.NewWriter(file)
+			defer writer.Flush()
+
+			if err := writer.Write([]string{"ID", "Code", "Nama", "Level", "ParentID"}); err != nil {
+				log.Fatal(err)
+			}
+
+			for iProv := 0; iProv < len(locations); iProv++ {
+				if err := writer.Write([]string{
+					strconv.Itoa(int(locations[iProv].ID)),
+					locations[iProv].Code,
+					locations[iProv].Name,
+					strconv.Itoa(int(locations[iProv].Level)),
+					"0",
+				}); err != nil {
+					log.Fatal(err)
+				}
+
+				for iCity := 0; iCity < len(locations[iProv].Cities); iCity++ {
+					if err := writer.Write([]string{
+						strconv.Itoa(int(locations[iProv].Cities[iCity].ID)),
+						locations[iProv].Cities[iCity].Code,
+						locations[iProv].Cities[iCity].Name,
+						strconv.Itoa(int(locations[iProv].Cities[iCity].Level)),
+						strconv.Itoa(int(locations[iProv].ID)),
+					}); err != nil {
+						log.Fatal(err)
+					}
+
+					for iDist := 0; iDist < len(locations[iProv].Cities[iCity].Districts); iDist++ {
+						if err := writer.Write([]string{
+							strconv.Itoa(int(locations[iProv].Cities[iCity].Districts[iDist].ID)),
+							locations[iProv].Cities[iCity].Districts[iDist].Code,
+							locations[iProv].Cities[iCity].Districts[iDist].Name,
+							strconv.Itoa(int(locations[iProv].Cities[iCity].Districts[iDist].Level)),
+							strconv.Itoa(int(locations[iProv].Cities[iCity].ID)),
+						}); err != nil {
+							log.Fatal(err)
+						}
+						
+						for iSubd := 0; iSubd < len(locations[iProv].Cities[iCity].Districts[iDist].Subdistrict); iSubd++ {
+							if err := writer.Write([]string{
+								strconv.Itoa(int(locations[iProv].Cities[iCity].Districts[iDist].Subdistrict[iSubd].ID)),
+								locations[iProv].Cities[iCity].Districts[iDist].Subdistrict[iSubd].Code,
+								locations[iProv].Cities[iCity].Districts[iDist].Subdistrict[iSubd].Name,
+								strconv.Itoa(int(locations[iProv].Cities[iCity].Districts[iDist].Subdistrict[iSubd].Level)),
+								strconv.Itoa(int(locations[iProv].Cities[iCity].Districts[iDist].ID)),
+							}); err != nil {
+								log.Fatal(err)
+							}
+						}
+					}
+				}
+			}
+		}
 	},
 }
 
