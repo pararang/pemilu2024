@@ -115,3 +115,38 @@ func (h *Controller) getByProvince(province kpu.Location) (provTree ProvinceTree
 
 	return provTree, nil
 }
+
+type Votes struct {
+	Votes map[string]interface{} `json:"votes"`
+	Docs  []string               `json:"docs"`
+}
+
+func (h *Controller) GetVotes(codeTPS string) (Votes, error) {
+	data, err := h.sirekap.GetVotesByTPS(codeTPS)
+	if err != nil {
+		return Votes{}, fmt.Errorf("error on GetVotesByTPS: %w", err)
+	}
+
+	mapCand := map[string]string{
+		"100025": "AMIN",
+		"100026": "PAGI",
+		"100027": "GAMA",
+	}
+
+	response := Votes{
+		Votes: make(map[string]interface{}),
+	}
+
+	for code, votes := range data.Chart {
+		cand, ok := mapCand[code]
+		if !ok {
+			continue
+		}
+
+		response.Votes[cand] = votes
+	}
+
+	response.Docs = data.Images
+
+	return response, nil
+}
