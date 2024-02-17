@@ -2,6 +2,7 @@ package controller
 
 import (
 	"fmt"
+	"log"
 	"runtime"
 
 	"github.com/pararang/pemilu2024/kpu"
@@ -33,16 +34,37 @@ func NewController(sirekap *kpu.Sirekap) *Controller {
 	}
 }
 
-func (h *Controller) GetLocations() ([]ProvinceTree, error) {
+func (c *Controller) maxGoroutine() uint64 {
+	memStats := new(runtime.MemStats)
+	runtime.ReadMemStats(memStats)
+	availableMemory := memStats.Sys // Total available memory in bytes
+	log.Println(fmt.Sprintf("availableMemory: %v", availableMemory))
+
+
+	numCPU := runtime.NumCPU() // Number of CPU cores
+	log.Println(fmt.Sprintf("numCPU: %v", numCPU))
+
+
+	optimalMaxGoroutines := availableMemory / (2 * 1024 * 1024) // Assume each goroutine consumes 128 MB
+	log.Println(fmt.Sprintf("optimalMaxGoroutines: %v", optimalMaxGoroutines))
+
+	if optimalMaxGoroutines > uint64(numCPU) {
+		optimalMaxGoroutines = uint64(numCPU)
+	}
+
+	return optimalMaxGoroutines
+}
+
+func (c *Controller) GetLocations(maxLoop uint) ([]ProvinceTree, error) {
 	var provinces kpu.Locations
-	err := h.sirekap.FetchLocations(&provinces, "0")
+	err := c.sirekap.FetchLocations(&provinces, "0")
 	if err != nil {
 		return nil, fmt.Errorf("error FetchLocations province: %w", err)
 	}
 
 	var (
 		locations    = make([]ProvinceTree, len(provinces))
-		maxGoroutine = runtime.NumCPU()
+		maxGoroutine = c.maxGoroutine() //runtime.NumCPU()
 		sem          = make(chan struct{}, maxGoroutine)
 	)
 
@@ -50,6 +72,11 @@ func (h *Controller) GetLocations() ([]ProvinceTree, error) {
 	var eg errgroup.Group
 
 	for idxProv := 0; idxProv < len(provinces); idxProv++ {
+		if maxLoop > 0 && maxLoop == uint(idxProv) {
+			locations = locations[0:maxLoop]
+			break
+		}
+
 		sem <- struct{}{} // Acquire semaphore
 
 		idx := idxProv
@@ -60,7 +87,7 @@ func (h *Controller) GetLocations() ([]ProvinceTree, error) {
 			}()
 
 			var err error
-			locations[idx], err = h.getByProvince(provinces[idx])
+			locations[idx], err = c.getByProvince(provinces[idx])
 			if err != nil {
 				return fmt.Errorf("error FetchLocations province %s (%s): %w",provinces[idx].Name, provinces[idx].Code, err)
 			}
@@ -76,11 +103,11 @@ func (h *Controller) GetLocations() ([]ProvinceTree, error) {
 	return locations, nil
 }
 
-func (h *Controller) getByProvince(province kpu.Location) (provTree ProvinceTree, err error) {
+func (c *Controller) getByProvince(province kpu.Location) (provTree ProvinceTree, err error) {
 	provTree.Location = province
 
 	var cities kpu.Locations
-	err = h.sirekap.FetchLocations(&cities, province.Code)
+	err = c.sirekap.FetchLocations(&cities, province.Code)
 	if err != nil {
 		return provTree, fmt.Errorf("getCities %s: %w", province.Name, err)
 	}
@@ -90,7 +117,7 @@ func (h *Controller) getByProvince(province kpu.Location) (provTree ProvinceTree
 		provTree.Cities[idxCity].Location = cities[idxCity]
 
 		var districts kpu.Locations
-		err = h.sirekap.FetchLocations(&districts, province.Code, cities[idxCity].Code)
+		err = c.sirekap.FetchLocations(&districts, province.Code, cities[idxCity].Code)
 		if err != nil {
 			return provTree, fmt.Errorf("getDistricts %s: %w", cities[idxCity].Name, err)
 		}
@@ -100,7 +127,7 @@ func (h *Controller) getByProvince(province kpu.Location) (provTree ProvinceTree
 			provTree.Cities[idxCity].Districts[idxDist].Location = districts[idxDist]
 
 			var subdistricts kpu.Locations
-			err = h.sirekap.FetchLocations(&subdistricts, province.Code, cities[idxCity].Code, districts[idxDist].Code)
+			err = c.sirekap.FetchLocations(&subdistricts, province.Code, cities[idxCity].Code, districts[idxDist].Code)
 			if err != nil {
 				return provTree, fmt.Errorf("getSubdistricts %s: %w", cities[idxCity].Name, err)
 			}
@@ -121,8 +148,8 @@ type Votes struct {
 	Docs  []string               `json:"docs"`
 }
 
-func (h *Controller) GetVotes(codeTPS string) (Votes, error) {
-	data, err := h.sirekap.GetVotesByTPS(codeTPS)
+func (c *Controller) GetVotes(codeTPS string) (Votes, error) {
+	data, err := c.sirekap.GetVotesByTPS(codeTPS)
 	if err != nil {
 		return Votes{}, fmt.Errorf("error on GetVotesByTPS: %w", err)
 	}

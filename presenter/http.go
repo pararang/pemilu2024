@@ -33,7 +33,7 @@ func (h *Handler) GetVotes(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *Handler) GetLocations(w http.ResponseWriter, r *http.Request) {
-	locations, err := h.control.GetLocations()
+	locations, err := h.control.GetLocations(0)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return

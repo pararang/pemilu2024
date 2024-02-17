@@ -30,7 +30,7 @@ var fetchLocationsCmd = &cobra.Command{
 		}(start)
 
 		controller := controller.NewController(kpu.NewSirekap(http.DefaultClient))
-		locations, err := controller.GetLocations()
+		locations, err := controller.GetLocations(maxLoop)
 		if err != nil {
 			log.Fatal(err)
 		}

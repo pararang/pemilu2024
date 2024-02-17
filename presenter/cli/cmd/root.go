@@ -10,6 +10,7 @@ import (
 )
 
 var fileType string
+var maxLoop uint
 
 // rootCmd represents the base command when called without any subcommands
 var rootCmd = &cobra.Command{
@@ -37,6 +38,7 @@ func Execute() {
 
 func init() {
 	rootCmd.PersistentFlags().StringVar(&fileType, "fileType", "", "file type i/o")
+	rootCmd.PersistentFlags().UintVar(&maxLoop, "maxLoop", 0, "max loop")
 	// Here you will define your flags and configuration settings.
 	// Cobra supports persistent flags, which, if defined here,
 	// will be global for your application.
@@ -47,5 +49,3 @@ func init() {
 	// when this action is called directly.
 	rootCmd.Flags().BoolP("toggle", "t", false, "Help message for toggle")
 }
-
-
