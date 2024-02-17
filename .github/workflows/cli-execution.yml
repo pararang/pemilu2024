@@ -21,6 +21,9 @@ jobs:
       - name: Execute CLI Fetch Locations
         run: go run presenter/cli/main.go fetchLocations --fileType csv
 
+      - name: Git Auto Commit
+        uses: stefanzweifel/git-auto-commit-action@v5.0.0
+
       - name: Commit CSV/JSON file
         run: |
           git config --local user.email "action@github.com"

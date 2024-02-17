@@ -31,7 +31,6 @@ func main() {
 		TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
 	}
 
-	// Create a new HTTP client with the custom transport
 	client := &http.Client{
 		Transport: &loggingTransport{
 			Transport: transport,
@@ -40,11 +39,9 @@ func main() {
 
 	presenter := presenter.NewPresenterHTTP(kpu.NewSirekap(client))
 
-	// Define the endpoint handler
 	http.HandleFunc("/fetch-votes", presenter.GetVotes)
 	http.HandleFunc("/fetch-locations", presenter.GetLocations)
 
-	// Start the HTTP server
 	log.Println("Server started on :8080")
 	log.Fatal(http.ListenAndServe(":8080", nil))
 }
