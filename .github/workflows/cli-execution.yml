@@ -1,0 +1,34 @@
+name: CLI Execution
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v2
+
+      - name: Set up Go
+        uses: actions/setup-go@v2
+        with:
+          go-version: 1.20
+
+      - name: Execute CLI Fetch Locations
+        run: go run presenter/cli/main.go fetchLocations --fileType csv
+
+      - name: Commit CSV/JSON file
+        run: |
+          git config --local user.email "action@github.com"
+          git config --local user.name "GitHub Action"
+          mkdir -p output
+          # Generate CSV/JSON file and move it to the output directory
+          # Example:
+          mv provinces_*.csv output/
+          git add .
+          git commit -m "Add locations csv"
+          git push
