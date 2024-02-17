@@ -16,7 +16,6 @@ type loggingTransport struct {
 func (t *loggingTransport) RoundTrip(req *http.Request) (*http.Response, error) {
 	log.Printf("Request: %s %s\n", req.Method, req.URL.String())
 
-	// Execute the request
 	resp, err := t.Transport.RoundTrip(req)
 	if err != nil {
 		return nil, err
