@@ -21,14 +21,19 @@ jobs:
       - name: Execute CLI Fetch Locations
         run: go run presenter/cli/main.go fetchLocations --fileType csv --maxLoop 1
 
-      # - name: Git Auto Commit
-      #   uses: stefanzweifel/git-auto-commit-action@v5.0.0
+      - name: Create folder output
+        run: |
+          if [ ! -d "output" ]; then
+            mkdir -p output
+            echo "Directory created."
+          else
+            echo "Directory already exists."
+          fi
 
       - name: Commit CSV/JSON file
         run: |
           git config --local user.email "action@github.com"
           git config --local user.name "GitHub Action"
-          mkdir -p output
           # Generate CSV/JSON file and move it to the output directory
           # Example:
           mv indonesia_location_*.csv output/
