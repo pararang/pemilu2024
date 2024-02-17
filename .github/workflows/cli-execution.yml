@@ -31,7 +31,7 @@ jobs:
           mkdir -p output
           # Generate CSV/JSON file and move it to the output directory
           # Example:
-          mv provinces_*.csv output/
+          mv indonesia_location_*.csv output/
           git add .
           git commit -m "Add locations csv"
           git push
