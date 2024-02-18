@@ -3,7 +3,7 @@ name: Fetch Locations
 on:
   push:
     branches:
-      - cli
+      - action/fetch-locations
 
 jobs:
   build:
