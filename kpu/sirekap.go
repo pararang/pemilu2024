@@ -105,3 +105,43 @@ func (s *Sirekap) fetchVotes(dest any, dynamicPaths ...string) error {
 
 	return nil
 }
+
+type ResponseDataNationwide struct {
+	Ts      string             `json:"ts"`
+	PSU     PSU                `json:"psu"`
+	Mode    string             `json:"mode"`
+	Chart   map[string]float64 `json:"chart"`
+	Table   map[string]Table   `json:"table"`
+	Progres Progres            `json:"progres"`
+}
+
+type Progres struct {
+	Total   int64 `json:"total"`
+	Progres int64 `json:"progres"`
+}
+
+type Table struct {
+	The100025      *int64  `json:"100025,omitempty"`
+	The100026      *int64  `json:"100026,omitempty"`
+	The100027      *int64  `json:"100027,omitempty"`
+	PSU            PSU     `json:"psu"`
+	Persen         float64 `json:"persen"`
+	StatusProgress bool    `json:"status_progress"`
+}
+
+type PSU string
+
+const (
+	Reguler PSU = "Reguler"
+)
+
+// https://sirekap-obj-data.kpu.go.id/pemilu/hhcw/ppwp.json
+func (s *Sirekap) GetVotesNationwide() (ResponseDataNationwide, error) {
+	var votes ResponseDataNationwide
+	err := s.fetchVotes(&votes)
+	if err != nil {
+		return ResponseDataNationwide{}, fmt.Errorf("error on fetchVotes: %w", err)
+	}
+
+	return votes, nil
+}

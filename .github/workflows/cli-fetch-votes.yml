@@ -1,0 +1,36 @@
+name: Fetch Votes
+
+on:
+  push:
+    branches:
+      - cli
+  schedule:
+    - cron: '0 0 * * *'
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v3
+
+      - name: Set up Go
+        uses: actions/setup-go@v3
+        with:
+          go-version: "1.20"
+
+      - name: Execute CLI fetchVotes
+        run: go run presenter/cli/main.go fetchVotes
+
+      - name: Commit output file
+        run: |
+          git config --local user.email "action@github.com"
+          git config --local user.name "GitHub Action"
+          mkdir -p output/votes
+          # Generate CSV/JSON file and move it to the output directory
+          # Example:
+          mv votes_*.json output/votes/
+          git add .
+          git commit -m "Add locations csv"
+          git push

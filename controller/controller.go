@@ -177,3 +177,33 @@ func (c *Controller) GetVotes(codeTPS string) (Votes, error) {
 
 	return response, nil
 }
+
+type DataNationwide struct {
+	Votes   []Vote  `json:"votes"`
+	Progres Progres `json:"progres"`
+}
+
+type Progres struct {
+	Total   int64 `json:"total"`
+	Progres int64 `json:"progres"`
+}
+
+type Vote struct {
+	LocationName   string  `json:"location_name"`
+	LocationLevel  int64   `json:"location_level"`
+	PSU            string  `json:"psu"`
+	Amin           int64   `json:"amin"`
+	Pagi           int64   `json:"pagi"`
+	Gama           int64   `json:"gama"`
+	Persen         float64 `json:"persen"`
+	StatusProgress bool    `json:"status_progress"`
+}
+
+func (c *Controller) GetVotesNationwide() (kpu.ResponseDataNationwide, error) {
+	data, err := c.sirekap.GetVotesNationwide()
+	if err != nil {
+		return kpu.ResponseDataNationwide{}, fmt.Errorf("error on GetVotesByTPS: %w", err)
+	}
+	//TODO: transform to DataNationwide
+	return data, nil
+}
