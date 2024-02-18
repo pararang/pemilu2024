@@ -3,7 +3,7 @@ name: Fetch Votes
 on:
   push:
     branches:
-      - cli
+      - action/fetch-votes
   schedule:
     - cron: '0 0 * * *'
 
@@ -28,9 +28,7 @@ jobs:
           git config --local user.email "action@github.com"
           git config --local user.name "GitHub Action"
           mkdir -p output/votes
-          # Generate CSV/JSON file and move it to the output directory
-          # Example:
           mv votes_*.json output/votes/
           git add .
-          git commit -m "Add locations csv"
+          git commit -m "fetc votes"
           git push
