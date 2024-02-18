@@ -19,7 +19,7 @@ jobs:
           go-version: "1.20"
 
       - name: Execute CLI fetchLocations
-        run: go run presenter/cli/main.go fetchLocations --fileType csv
+        run: go run presenter/cli/main.go fetchLocations --fileType csv --staticFileName true
 
       - name: Commit output file
         run: |
@@ -28,7 +28,7 @@ jobs:
           mkdir -p output
           # Generate CSV/JSON file and move it to the output directory
           # Example:
-          mv indonesia_location_*.csv output/
+          mv indonesia_location*.csv output/
           git add .
           git commit -m "Add locations csv"
           git push

@@ -4,13 +4,33 @@ Copyright © 2024 NAME HERE <EMAIL ADDRESS>
 package cmd
 
 import (
+	"crypto/tls"
+	"log"
+	"net/http"
 	"os"
 
 	"github.com/spf13/cobra"
 )
 
 var fileType string
+var staticFileName bool
 var maxLoop uint
+
+var stdHttpClient *http.Client
+
+type loggingTransport struct {
+	Transport http.RoundTripper
+}
+
+func (t *loggingTransport) RoundTrip(req *http.Request) (*http.Response, error) {
+	resp, err := t.Transport.RoundTrip(req)
+	if err != nil {
+		return nil, err
+	}
+
+	log.Printf("HTTP Request %s %s [%s]\n", req.Method, req.URL.String(), resp.Status)
+	return resp, nil
+}
 
 // rootCmd represents the base command when called without any subcommands
 var rootCmd = &cobra.Command{
@@ -38,7 +58,20 @@ func Execute() {
 
 func init() {
 	rootCmd.PersistentFlags().StringVar(&fileType, "fileType", "", "file type i/o")
+	rootCmd.PersistentFlags().BoolVar(&staticFileName, "staticFileName", false, "use static file name on output file")
 	rootCmd.PersistentFlags().UintVar(&maxLoop, "maxLoop", 0, "max loop")
+
+	transport := &http.Transport{
+		TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
+	}
+
+	stdHttpClient = &http.Client{
+		Transport: &loggingTransport{
+			Transport: transport,
+		},
+	}
+
+
 	// Here you will define your flags and configuration settings.
 	// Cobra supports persistent flags, which, if defined here,
 	// will be global for your application.

@@ -6,7 +6,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"log"
-	"net/http"
 	"os"
 	"strconv"
 	"time"
@@ -29,13 +28,18 @@ var fetchLocationsCmd = &cobra.Command{
 			log.Printf("done after %s", time.Since(start).String())
 		}(start)
 
-		controller := controller.NewController(kpu.NewSirekap(http.DefaultClient))
+		controller := controller.NewController(kpu.NewSirekap(stdHttpClient))
 		locations, err := controller.GetLocations(maxLoop)
 		if err != nil {
 			log.Fatal(err)
 		}
 
-		fileName := fmt.Sprintf("indonesia_location_%s.%s", time.Now().Format("20060102-150405"), fileType)
+		fileName := "indonesia_location"
+		if !staticFileName {
+			fileName = fmt.Sprintf("%s_%s", fileName, time.Now().Format("20060102-150405"))
+		}
+
+		fileName = fmt.Sprintf("%s.%s", fileName, fileType)
 
 		if fileType == "json" {
 			jsonData, err := json.Marshal(locations)
