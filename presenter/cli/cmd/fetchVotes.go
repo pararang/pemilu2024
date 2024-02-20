@@ -30,14 +30,14 @@ var fetchVotesCmd = &cobra.Command{
 		}
 
 		localData := struct {
-			Raw kpu.ResponseDataNationwide `json:"raw_data"`
 			LocalTimestamp string `json:"local_timestamp"`
+			Raw kpu.ResponseDataNationwide `json:"raw_data"`
 		} {
-			Raw: votes,
 			LocalTimestamp: time.Now().UTC().Format(time.RFC3339),
+			Raw: votes,
 		}
 
-		jsonData, err := json.Marshal(localData)
+		jsonData, err := json.MarshalIndent(localData, "", "\t")
 		if err != nil {
 			log.Fatal(err)
 		}
