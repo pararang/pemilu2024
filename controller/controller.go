@@ -64,7 +64,7 @@ func (c *Controller) GetLocations(maxLoop uint) ([]ProvinceTree, error) {
 
 	var (
 		locations    = make([]ProvinceTree, len(provinces))
-		maxGoroutine = 20 //c.maxGoroutine() //runtime.NumCPU()
+		maxGoroutine = len(provinces) //20 //c.maxGoroutine() //runtime.NumCPU()
 		sem          = make(chan struct{}, maxGoroutine)
 	)
 
