@@ -4,10 +4,12 @@ Copyright © 2024 NAME HERE <EMAIL ADDRESS>
 package cmd
 
 import (
+	"encoding/csv"
 	"encoding/json"
 	"fmt"
 	"log"
 	"os"
+	"strings"
 	"time"
 
 	"github.com/pararang/pemilu2024/controller"
@@ -23,18 +25,19 @@ var fetchVotesCmd = &cobra.Command{
 	Run: func(cmd *cobra.Command, args []string) {
 		fmt.Println("fetchVotes called")
 
-		controller := controller.NewController(kpu.NewSirekap(stdHttpClient))
+		sirekapClient := kpu.NewSirekap(stdHttpClient)
+		controller := controller.NewController(sirekapClient)
 		votes, err := controller.GetVotesNationwide()
 		if err != nil {
 			log.Fatal(err)
 		}
 
 		localData := struct {
-			LocalTimestamp string `json:"local_timestamp"`
-			Raw kpu.ResponseDataNationwide `json:"raw_data"`
-		} {
+			LocalTimestamp string                     `json:"local_timestamp"`
+			Raw            kpu.ResponseDataNationwide `json:"raw_data"`
+		}{
 			LocalTimestamp: time.Now().UTC().Format(time.RFC3339),
-			Raw: votes,
+			Raw:            votes,
 		}
 
 		jsonData, err := json.MarshalIndent(localData, "", "\t")
@@ -45,6 +48,53 @@ var fetchVotesCmd = &cobra.Command{
 		err = os.WriteFile("votes_nationwide.json", jsonData, 0644)
 		if err != nil {
 			log.Fatal(err)
+		}
+
+		var provinces kpu.Locations
+		err = sirekapClient.FetchLocations(&provinces, "0")
+		if err != nil {
+			log.Fatal(err)
+		}
+
+		var mapProvName = make(map[string]string, 0)
+		for _, prov := range provinces {
+			mapProvName[prov.Code] = prov.Name
+		}
+
+		for code, name := range mapProvName {
+			vote, ok := votes.Table[code]
+			if ok {
+				filename := strings.ReplaceAll(fmt.Sprintf("votes_0_%s.csv", strings.ToLower(name)), " ", "_")
+				var osFile *os.File
+				_, err := os.Stat(filename)
+				var isCreate bool
+				if os.IsNotExist(err) {
+					// File doesn't exist, create it
+					osFile, err = os.Create(filename)
+					isCreate = true
+				} else {
+					// File exists, open it in append mode
+					osFile, err = os.OpenFile(filename, os.O_APPEND|os.O_WRONLY, 0644)
+
+				}
+
+				if err != nil {
+					log.Fatal(err)
+				}
+				defer osFile.Close()
+
+				osWriter := csv.NewWriter(osFile)
+				defer osWriter.Flush()
+
+				if isCreate {
+					if err := osWriter.Write([]string{"ts", "amin", "pagi", "gama"}); err != nil {
+						log.Fatal(err)
+					}
+				}
+				if err := osWriter.Write([]string{votes.Ts, fmt.Sprintf("%d", *vote.The100025), fmt.Sprintf("%d", *vote.The100026), fmt.Sprintf("%d", *vote.The100027)}); err != nil {
+					log.Fatal(err)
+				}
+			}
 		}
 	},
 }
