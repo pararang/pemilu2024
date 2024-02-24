@@ -29,6 +29,7 @@ jobs:
           git config --local user.name "GitHub Action"
           mkdir -p output/votes
           mv votes_*.json output/votes/
+          mv votes_*.csv output/votes/
           git add .
           git commit -m "fetc votes"
           git push
