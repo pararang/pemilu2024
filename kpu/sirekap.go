@@ -81,7 +81,7 @@ func (s *Sirekap) FetchLocations(dest *Locations, dynamicPaths ...string) error 
 
 func (s *Sirekap) fetchVotes(dest any, dynamicPaths ...string) error {
 	// "https://sirekap-obj-data.kpu.go.id/pemilu/hhcw/ppwp/73/7371/737114/7371141006/7371141006002.json"
-	basePathVote, err := url.JoinPath(s.host, "pemilu/hhcw/ppwp")
+	basePathVote, err := url.JoinPath(s.host, "pemilu/hhcw")
 	if err != nil {
 		return fmt.Errorf("error on build base path votes: %w", err)
 	}
@@ -106,7 +106,7 @@ func (s *Sirekap) fetchVotes(dest any, dynamicPaths ...string) error {
 	return nil
 }
 
-type ResponseDataNationwide struct {
+type ResponseDataPresidentialNationwide struct {
 	Ts      string             `json:"ts"`
 	PSU     PSU                `json:"psu"`
 	Mode    string             `json:"mode"`
@@ -136,11 +136,55 @@ const (
 )
 
 // https://sirekap-obj-data.kpu.go.id/pemilu/hhcw/ppwp.json
-func (s *Sirekap) GetVotesNationwide() (ResponseDataNationwide, error) {
-	var votes ResponseDataNationwide
-	err := s.fetchVotes(&votes)
+func (s *Sirekap) GetVotesPresidentialNationwide() (ResponseDataPresidentialNationwide, error) {
+	var votes ResponseDataPresidentialNationwide
+	err := s.fetchVotes(&votes, "ppwp")
 	if err != nil {
-		return ResponseDataNationwide{}, fmt.Errorf("error on fetchVotes: %w", err)
+		return ResponseDataPresidentialNationwide{}, fmt.Errorf("error on fetchVotes: %w", err)
+	}
+
+	return votes, nil
+}
+
+type ResponseDataLegislativeNationwide struct {
+	Ts      string           `json:"ts"`
+	PSU     PSU              `json:"psu"`
+	Mode    string           `json:"mode"`
+	Chart   Chart            `json:"chart"`
+	Table   map[string]Chart `json:"table"`
+	Progres Progres          `json:"progres"`
+}
+
+type Chart struct {
+	The1           int64    `json:"1"`
+	The2           int64    `json:"2"`
+	The3           int64    `json:"3"`
+	The4           int64    `json:"4"`
+	The5           int64    `json:"5"`
+	The6           int64    `json:"6"`
+	The7           int64    `json:"7"`
+	The8           int64    `json:"8"`
+	The9           int64    `json:"9"`
+	The10          int64    `json:"10"`
+	The11          int64    `json:"11"`
+	The12          int64    `json:"12"`
+	The13          int64    `json:"13"`
+	The14          int64    `json:"14"`
+	The15          int64    `json:"15"`
+	The16          int64    `json:"16"`
+	The17          int64    `json:"17"`
+	The24          int64    `json:"24"`
+	PSU            *PSU     `json:"psu,omitempty"`
+	Persen         *float64 `json:"persen,omitempty"`
+	StatusProgress *bool    `json:"status_progress,omitempty"`
+}
+
+// https://sirekap-obj-data.kpu.go.id/pemilu/hhcw/pdpr.json
+func (s *Sirekap) GetVotesLegislativeNationwide() (ResponseDataLegislativeNationwide, error) {
+	var votes ResponseDataLegislativeNationwide
+	err := s.fetchVotes(&votes, "pdpr")
+	if err != nil {
+		return ResponseDataLegislativeNationwide{}, fmt.Errorf("error on fetchVotes: %w", err)
 	}
 
 	return votes, nil
