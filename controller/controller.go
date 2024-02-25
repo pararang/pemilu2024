@@ -199,10 +199,10 @@ type Vote struct {
 	StatusProgress bool    `json:"status_progress"`
 }
 
-func (c *Controller) GetVotesNationwide() (kpu.ResponseDataNationwide, error) {
-	data, err := c.sirekap.GetVotesNationwide()
+func (c *Controller) GetVotesNationwide() (kpu.ResponseDataPresidentialNationwide, error) {
+	data, err := c.sirekap.GetVotesPresidentialNationwide()
 	if err != nil {
-		return kpu.ResponseDataNationwide{}, fmt.Errorf("error on GetVotesByTPS: %w", err)
+		return kpu.ResponseDataPresidentialNationwide{}, fmt.Errorf("error on GetVotesByTPS: %w", err)
 	}
 	//TODO: transform to DataNationwide
 	return data, nil

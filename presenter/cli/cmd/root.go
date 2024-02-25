@@ -8,6 +8,7 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"time"
 
 	"github.com/spf13/cobra"
 )
@@ -16,6 +17,7 @@ var fileType string
 var staticFileName bool
 var maxLoop uint
 
+var timeProcessed = time.Now().UTC()
 var stdHttpClient *http.Client
 
 type loggingTransport struct {
