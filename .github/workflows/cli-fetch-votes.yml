@@ -29,5 +29,5 @@ jobs:
           git config --local user.name "GitHub Action"
           mkdir -p output/votes
           git add .
-          git commit -m "fetc votes - $(date +"%Y-%m-%d %H:%M:%S")"
+          git commit -m "fetc votes - $(date -u +"%Y-%m-%d %H:%M:%S UTC")"
           git push
