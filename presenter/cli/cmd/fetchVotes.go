@@ -32,11 +32,13 @@ var fetchVotesCmd = &cobra.Command{
 			log.Fatal(err)
 		}
 
+		timeProcessed := time.Now().UTC().Format(time.RFC3339)
+
 		localData := struct {
 			LocalTimestamp string                     `json:"local_timestamp"`
 			Raw            kpu.ResponseDataNationwide `json:"raw_data"`
 		}{
-			LocalTimestamp: time.Now().UTC().Format(time.RFC3339),
+			LocalTimestamp: timeProcessed,
 			Raw:            votes,
 		}
 
@@ -45,7 +47,7 @@ var fetchVotesCmd = &cobra.Command{
 			log.Fatal(err)
 		}
 
-		err = os.WriteFile("votes_nationwide.json", jsonData, 0644)
+		err = os.WriteFile("output/votes/votes_nationwide.json", jsonData, 0644)
 		if err != nil {
 			log.Fatal(err)
 		}
@@ -64,7 +66,7 @@ var fetchVotesCmd = &cobra.Command{
 		for code, name := range mapProvName {
 			vote, ok := votes.Table[code]
 			if ok {
-				filename := strings.ReplaceAll(fmt.Sprintf("votes_0_%s.csv", strings.ToLower(name)), " ", "_")
+				filename := strings.ReplaceAll(fmt.Sprintf("output/votes/votes_0_%s.csv", strings.ToLower(name)), " ", "_")
 				var osFile *os.File
 				_, err := os.Stat(filename)
 				var isCreate bool
@@ -75,7 +77,6 @@ var fetchVotesCmd = &cobra.Command{
 				} else {
 					// File exists, open it in append mode
 					osFile, err = os.OpenFile(filename, os.O_APPEND|os.O_WRONLY, 0644)
-
 				}
 
 				if err != nil {
@@ -87,11 +88,17 @@ var fetchVotesCmd = &cobra.Command{
 				defer osWriter.Flush()
 
 				if isCreate {
-					if err := osWriter.Write([]string{"ts", "amin", "pagi", "gama"}); err != nil {
+					if err := osWriter.Write([]string{"ts", "amin", "pagi", "gama", "created_at"}); err != nil {
 						log.Fatal(err)
 					}
 				}
-				if err := osWriter.Write([]string{votes.Ts, fmt.Sprintf("%d", *vote.The100025), fmt.Sprintf("%d", *vote.The100026), fmt.Sprintf("%d", *vote.The100027)}); err != nil {
+				if err := osWriter.Write([]string{
+					votes.Ts,
+					fmt.Sprintf("%d", *vote.The100025),
+					fmt.Sprintf("%d", *vote.The100026),
+					fmt.Sprintf("%d", *vote.The100027),
+					timeProcessed,
+				}); err != nil {
 					log.Fatal(err)
 				}
 			}

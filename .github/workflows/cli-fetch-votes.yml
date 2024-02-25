@@ -28,8 +28,6 @@ jobs:
           git config --local user.email "action@github.com"
           git config --local user.name "GitHub Action"
           mkdir -p output/votes
-          mv votes_*.json output/votes/
-          mv votes_*.csv output/votes/
           git add .
-          git commit -m "fetc votes"
+          git commit -m "fetc votes - $(date +"%Y-%m-%d %H:%M:%S")"
           git push
