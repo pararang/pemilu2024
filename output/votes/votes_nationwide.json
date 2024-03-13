@@ -1,7 +1,7 @@
 {
-	"local_timestamp": "2024-03-13T04:06:27Z",
+	"local_timestamp": "2024-03-13T05:06:30Z",
 	"raw_data": {
-		"ts": "2024-03-13 11:00:15",
+		"ts": "2024-03-13 12:00:15",
 		"psu": "Reguler",
 		"mode": "hhcw",
 		"chart": {
@@ -24,7 +24,7 @@
 				"100026": 2952715,
 				"100027": 616136,
 				"psu": "Reguler",
-				"persen": 61.48,
+				"persen": 61.5,
 				"status_progress": true
 			},
 			"13": {
@@ -112,7 +112,7 @@
 				"100026": 10825450,
 				"100027": 6997817,
 				"psu": "Reguler",
-				"persen": 88.89,
+				"persen": 88.9,
 				"status_progress": true
 			},
 			"34": {
@@ -152,7 +152,7 @@
 				"100026": 1784227,
 				"100027": 206966,
 				"psu": "Reguler",
-				"persen": 82.94,
+				"persen": 83,
 				"status_progress": true
 			},
 			"53": {
@@ -216,7 +216,7 @@
 				"100026": 1003416,
 				"100027": 128847,
 				"psu": "Reguler",
-				"persen": 84.38,
+				"persen": 84.42,
 				"status_progress": true
 			},
 			"73": {
@@ -280,7 +280,7 @@
 				"100026": 50842,
 				"100027": 25072,
 				"psu": "Reguler",
-				"persen": 27.3,
+				"persen": 27.56,
 				"status_progress": true
 			},
 			"93": {
@@ -326,7 +326,7 @@
 		},
 		"progres": {
 			"total": 823378,
-			"progres": 643521
+			"progres": 643551
 		}
 	}
 }
