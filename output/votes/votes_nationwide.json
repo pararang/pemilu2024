@@ -1,7 +1,7 @@
 {
-	"local_timestamp": "2024-03-17T23:06:46Z",
+	"local_timestamp": "2024-03-18T00:21:25Z",
 	"raw_data": {
-		"ts": "2024-03-18 06:00:16",
+		"ts": "2024-03-18 07:00:15",
 		"psu": "Reguler",
 		"mode": "hhcw",
 		"chart": {
@@ -16,7 +16,7 @@
 				"100026": 570090,
 				"100027": 57148,
 				"psu": "Reguler",
-				"persen": 78.82,
+				"persen": 78.84,
 				"status_progress": true
 			},
 			"12": {
@@ -326,7 +326,7 @@
 		},
 		"progres": {
 			"total": 823378,
-			"progres": 646575
+			"progres": 646577
 		}
 	}
 }
