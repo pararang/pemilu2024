@@ -1,7 +1,7 @@
 {
-	"local_timestamp": "2024-03-22T07:06:48Z",
+	"local_timestamp": "2024-03-22T08:07:54Z",
 	"raw_data": {
-		"ts": "2024-03-22 14:00:15",
+		"ts": "2024-03-22 15:00:15",
 		"psu": "Reguler",
 		"mode": "hhcw",
 		"chart": {
@@ -72,7 +72,7 @@
 				"100026": 3242350,
 				"100027": 705152,
 				"psu": "Reguler",
-				"persen": 94.31,
+				"persen": 94.32,
 				"status_progress": true
 			},
 			"19": {
@@ -248,7 +248,7 @@
 				"100026": 473637,
 				"100027": 55466,
 				"psu": "Reguler",
-				"persen": 97.32,
+				"persen": 97.56,
 				"status_progress": true
 			},
 			"81": {
@@ -326,7 +326,7 @@
 		},
 		"progres": {
 			"total": 823378,
-			"progres": 648918
+			"progres": 648931
 		}
 	}
 }
