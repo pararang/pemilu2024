@@ -1,4 +1,4 @@
-Fetcher/Extractor data pergitungan suara (sirekap) KPU untuk pemilu 2024. Dirancang untuk dijalankan secara berkala melaului github action (lihat `.github/workflows/cli-fetch-votes.yml`).
+Fetcher/Extractor data pergitungan suara (sirekap) KPU untuk pemilu 2024. Dirancang untuk dijalankan secara berkala melaului github action (lihat [.github/workflows/cli-fetch-votes.yml](https://github.com/pararang/pemilu2024/blob/master/.github/workflows/cli-fetch-votes.yml)).
 
 > :warning: **Gunakan dengan Bijaksana:** Sebelum melakukan scrapper ke web manapun, pastikan Anda memahami dan mematuhi praktik web scraping yang etis. Hormati situs web yang Anda scrap dan patuhi syarat penggunaannya.
 
@@ -33,8 +33,8 @@ Proyek ini dibuat dalam rangka mempelajari cara menggunakan dan memanfaatkan fit
           ...
    ```
   
-3. fetch data perhitungan presiden dan partai dari website KPU (lihat `presenter/cli/cmd/fetchVotes.go`)
-4. extract data dan simpan ke file csv ()
+3. fetch data perhitungan presiden dan partai dari website KPU (lihat [presenter/cli/cmd/fetchVotes.go](https://github.com/pararang/pemilu2024/blob/master/presenter/cli/cmd/fetchVotes.go))
+4. extract data dan simpan ke file csv (lihat [output/votes](https://github.com/pararang/pemilu2024/tree/master/output/votes))
    ```yml
    jobs:
       build:
